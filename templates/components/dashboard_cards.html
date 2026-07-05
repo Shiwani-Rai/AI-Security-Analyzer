@@ -1,0 +1,25 @@
+<div class="dashboard">
+
+    <!-- Overall Security -->
+
+    <div class="card security-card">
+
+        <div class="icon">🛡</div>
+
+        <h3>Overall Security</h3>
+
+        {% if result["risk"]["risk"]=="LOW" %}
+
+            <h2 class="safe">SECURE</h2>
+
+        {% elif result["risk"]["risk"]=="MEDIUM" %}
+
+            <h2 class="warning">WARNING</h2>
+
+        {% else %}
+
+            <h2 class="danger">HIGH RISK</h2>
+
+        {% endif %}
+
+    </div>

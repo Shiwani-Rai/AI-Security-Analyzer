@@ -1,0 +1,7 @@
+2026-07-05 14:00:11 WARNING SQL Injection detected: UNION SELECT username,password FROM users
+2026-07-05 14:01:32 ERROR GET /login.php?id=' OR '1'='1
+2026-07-05 14:02:15 WARNING <script>alert('XSS')</script> submitted
+2026-07-05 14:03:24 ERROR Directory traversal ../../etc/passwd attempted
+2026-07-05 14:04:31 ERROR cmd.php uploaded to web server
+2026-07-05 14:05:18 WARNING curl/7.68.0 scanning target
+2026-07-05 14:06:55 ERROR Port Scan detected using nmap

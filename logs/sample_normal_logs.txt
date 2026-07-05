@@ -1,0 +1,7 @@
+2026-07-05 09:00:11 INFO User john logged into workstation
+2026-07-05 09:05:23 INFO File report.pdf opened successfully
+2026-07-05 09:12:42 INFO Windows Defender scan completed
+2026-07-05 09:18:10 INFO Outlook synchronized mailbox
+2026-07-05 09:24:55 INFO Chrome browser started
+2026-07-05 09:31:07 INFO VPN connection established
+2026-07-05 09:37:18 INFO User logged out

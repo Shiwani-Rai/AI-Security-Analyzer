@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>AI Security Analyzer</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>🛡 AI Security Analyzer</h1>
+
+    <p>Upload a log file for AI-powered security analysis.</p>
+
+    <form action="/analyze" method="POST" enctype="multipart/form-data">
+
+        <input type="file" name="logfile" required>
+
+        <br><br>
+
+        <button id="analyzeBtn" type="submit">
+            Analyze Log
+        </button>
+
+    </form>
+
+    <!-- Loading Section -->
+
+    <div id="loading" style="display:none; margin-top:30px; text-align:center;">
+
+        <h2>🔄 Analyzing Security Logs...</h2>
+
+        <p>Please wait while the AI analyzes your log.</p>
+
+        <div class="loader"></div>
+
+        <br>
+
+        <p>
+            ✔ Reading Logs<br>
+            ✔ Detecting Threats<br>
+            ✔ Extracting IOCs<br>
+            🤖 Running AI Analysis...
+        </p>
+
+    </div>
+
+</div>
+
+<script>
+
+document.querySelector("form").addEventListener("submit", function(){
+
+    document.getElementById("loading").style.display = "block";
+
+    document.getElementById("analyzeBtn").disabled = true;
+
+    document.getElementById("analyzeBtn").innerHTML = "Analyzing...";
+
+});
+
+</script>
+
+</body>
+
+</html>

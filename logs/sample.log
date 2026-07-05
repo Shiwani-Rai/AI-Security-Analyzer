@@ -1,0 +1,9 @@
+2026-06-24 INFO User login successful
+2026-06-24 WARNING Multiple login attempts detected from 192.168.1.50
+2026-06-24 ERROR Authentication failed for admin@example.com
+2026-06-24 ERROR Suspicious download from https://malicious-site.com
+2026-06-24 ERROR Database connection failed
+2026-06-28 WARNING Real-time monitor test
+2026-06-28 ERROR Multiple login attempts detected from 192.168.1.20
+2026-06-28 ERROR Multiple login attempts detected
+2026-06-28 ERROR Multiple login attempts detected from 192.168.1.20

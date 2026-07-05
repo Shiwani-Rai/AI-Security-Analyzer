@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>AI Security Analyzer - Report</title>
+
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/style.css') }}">
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+</head>
+
+<body>
+
+<div class="layout">
+
+    <div class="sidebar">
+
+        <h2>🛡 SOC</h2>
+
+        <ul>
+
+            <li><a href="#dashboard">📊 Dashboard</a></li>
+
+            <li><a href="#alerts">🚨 Threats</a></li>
+
+            <li><a href="#mitre">🎯 MITRE</a></li>
+
+            <li><a href="#ioc">🌐 IOCs</a></li>
+
+            <li><a href="#report">📄 Reports</a></li>
+
+        </ul>
+
+    </div>
+
+    <div class="container">
+
+<h1>🛡 AI Security Analyzer</h1>
+
+<div class="report-info">
+
+<div><strong>Case ID:</strong> {{ case_id }}</div>
+
+<div><strong>Analyst:</strong> {{ analyst }}</div>
+
+<div><strong>Analysis Date:</strong> {{ last_updated }}</div>
+
+<div><strong>Version:</strong> {{ version }}</div>
+
+</div>
+
+{% include "components/dashboard_cards.html" %}
+
+<div class="last-updated">
+    <strong>🕒 Last Updated:</strong> {{ last_updated if last_updated else "Never" }}
+</div>
+
+<hr>
+
+<div class="executive-summary">
+
+<h2>📊 Executive Summary</h2>
+
+<div class="summary-grid">
+
+<div>
+
+<h3>Security Status</h3>
+
+{% if result["risk"]["risk"]=="LOW" %}
+
+<p class="status-good">🟢 Secure</p>
+
+{% elif result["risk"]["risk"]=="MEDIUM" %}
+
+<p class="status-medium">🟡 Attention Required</p>
+
+{% else %}
+
+<p class="status-high">🔴 High Risk</p>
+
+{% endif %}
+
+</div>
+
+<div>
+
+<h3>Threats</h3>
+
+<p>{{ result["threats"]|length }}</p>
+
+</div>
+
+<div>
+
+<h3>MITRE Techniques</h3>
+
+<p>{{ result["mitre"]|length }}</p>
+
+</div>
+
+<div>
+
+<h3>VirusTotal Hits</h3>
+
+<p>{{ result["virustotal"]|length }}</p>
+
+</div>
+
+</div>
+
+</div>
+
+<h2>🚦 Security Health</h2>
+
+<div class="risk-gauge-container">
+
+    <h3>Executive Risk Meter</h3>
+
+    <div class="risk-gauge">
+
+        <div
+            class="risk-fill"
+
+            style="width: {{ result['risk']['score'] }}%;
+            background:
+            {% if result['risk']['score'] < 35 %}
+                #4CAF50
+            {% elif result['risk']['score'] < 70 %}
+                #FFC107
+            {% else %}
+                #F44336
+            {% endif %};">
+
+        </div>
+
+    </div>
+
+    <h2>{{ result["risk"]["score"] }}/100</h2>
+
+</div>
+
+<h2>🎯 Detection Confidence</h2>
+
+<div class="risk-gauge-container">
+
+<div class="risk-gauge">
+
+<div class="risk-fill"
+
+style="width: {{ result['detection_confidence'] }}%;
+background:#2563eb;">
+
+</div>
+
+</div>
+
+<h2>{{ result["detection_confidence"] }}%</h2>
+
+</div>
+
+<hr>
+
+<h2>🚨 Threat Severity Overview</h2>
+
+<div class="severity-grid">
+
+<div class="severity-card critical">
+
+<h3>🔴 Critical</h3>
+
+<h1>{{ result["threat_severity"]["critical"] }}</h1>
+
+</div>
+
+<div class="severity-card high">
+
+<h3>🟠 High</h3>
+
+<h1>{{ result["threat_severity"]["high"] }}</h1>
+
+</div>
+
+<div class="severity-card medium">
+
+<h3>🟡 Medium</h3>
+
+<h1>{{ result["threat_severity"]["medium"] }}</h1>
+
+</div>
+
+<div class="severity-card low">
+
+<h3>🟢 Low</h3>
+
+<h1>{{ result["threat_severity"]["low"] }}</h1>
+
+</div>
+
+</div>
+
+<div class="progress-section">
+
+    <label>Risk Score</label>
+
+    <progress
+        value="{{ result['risk']['score'] }}"
+        max="100">
+    </progress>
+
+    <label>Threat Detection</label>
+
+    <progress
+        value="{{ result['threats']|length }}"
+        max="20">
+    </progress>
+
+    <label>IOC Coverage</label>
+
+    <progress
+        value="{{
+            result['iocs']['ips']|length +
+            result['iocs']['emails']|length +
+            result['iocs']['urls']|length +
+            result['iocs']['domains']|length +
+            result['iocs']['md5']|length +
+            result['iocs']['sha1']|length +
+            result['iocs']['sha256']|length +
+            result['iocs']['cves']|length
+        }}"
+        max="50">
+    </progress>
+
+    <label>MITRE Coverage</label>
+
+    <progress
+        value="{{ result['mitre']|length }}"
+        max="20">
+    </progress>
+
+</div>
+
+<hr>
+
+<hr>
+
+<h2>📊 Log Statistics</h2>
+
+<canvas id="logChart"></canvas>
+
+<br><br>
+
+<h2>📈 Threat Distribution</h2>
+
+<canvas id="threatChart"></canvas>
+
+<hr>
+
+<h2>🚨 Live Security Alerts</h2>
+
+<div class="alert-panel">
+
+{% if result["threats"] %}
+
+    {% for threat in result["threats"] %}
+
+        {% if "Brute" in threat or "Malware" in threat or "Ransomware" in threat %}
+
+            <div class="alert-box high">
+
+                <strong>🔴 HIGH</strong><br>
+
+                {{ threat }}
+
+            </div>
+
+        {% elif "SQL" in threat or "PowerShell" in threat or "Credential" in threat or "Command" in threat %}
+
+            <div class="alert-box medium">
+
+                <strong>🟠 MEDIUM</strong><br>
+
+                {{ threat }}
+
+            </div>
+
+        {% else %}
+
+            <div class="alert-box low">
+
+                <strong>🟢 LOW</strong><br>
+
+                {{ threat }}
+
+            </div>
+
+        {% endif %}
+
+    {% endfor %}
+
+{% else %}
+
+<div class="alert-box safe">
+
+✅ No active security alerts detected.
+
+</div>
+
+{% endif %}
+
+<hr>
+
+{% if result["risk"]["risk"] == "HIGH" %}
+
+<div class="alert-banner high">
+
+🚨 HIGH RISK INCIDENT DETECTED
+
+</div>
+
+{% elif result["risk"]["risk"] == "MEDIUM" %}
+
+<div class="alert-banner medium">
+
+⚠️ MEDIUM RISK INCIDENT
+
+</div>
+
+{% else %}
+
+<div class="alert-banner low">
+
+✅ SYSTEM HEALTHY
+
+</div>
+
+{% endif %}
+
+<h2>🚨 Detected Threats</h2>
+
+{% if result["threats"] %}
+
+<ul>
+
+{% for threat in result["threats"] %}
+
+<li>{{ threat }}</li>
+
+{% endfor %}
+
+</ul>
+
+{% else %}
+
+<p>No threats detected.</p>
+
+{% endif %}
+
+<hr>
+
+<h2>📊 Threat Severity Dashboard</h2>
+
+<canvas id="severityChart"></canvas>
+
+<br><br>
+
+<table class="mitre-table">
+
+    <thead>
+
+        <tr>
+            <th>Severity</th>
+            <th>Count</th>
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+        <tr>
+            <td>🔴 Critical</td>
+            <td>{{ result["threat_severity"]["Critical"] }}</td>
+        </tr>
+
+        <tr>
+            <td>🟠 High</td>
+            <td>{{ result["threat_severity"]["High"] }}</td>
+        </tr>
+
+        <tr>
+            <td>🟡 Medium</td>
+            <td>{{ result["threat_severity"]["Medium"] }}</td>
+        </tr>
+
+        <tr>
+            <td>🟢 Low</td>
+            <td>{{ result["threat_severity"]["Low"] }}</td>
+        </tr>
+
+    </tbody>
+
+</table>
+
+<hr>
+
+<h2>📊 MITRE ATT&CK Coverage</h2>
+
+<div class="mitre-stats">
+
+{% for tactic, count in result["mitre_statistics"].items() %}
+
+<div class="mitre-item">
+
+<div class="mitre-label">
+
+{{ tactic }}
+
+</div>
+
+<div class="mitre-bar">
+
+<div
+class="mitre-fill"
+style="width: {{ count*20 }}%;">
+
+</div>
+
+</div>
+
+<div class="mitre-count">
+
+{{ count }}
+
+</div>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+<hr>
+
+<h2>🎯 MITRE ATT&CK Mapping</h2>
+
+{% if result["mitre"] %}
+
+<table class="mitre-table">
+
+    <thead>
+
+        <tr>
+
+            <th>Technique ID</th>
+
+            <th>Technique Name</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+    {% for item in result["mitre"] %}
+
+        <tr>
+
+            <td>{{ item["id"] }}</td>
+
+            <td>{{ item["name"] }}</td>
+
+        </tr>
+
+    {% endfor %}
+
+    </tbody>
+
+</table>
+
+<br>
+
+<div class="mitre-grid">
+
+{% for item in result["mitre"] %}
+
+<div class="mitre-card">
+
+<h3>{{ item["id"] }}</h3>
+
+<p>{{ item["name"] }}</p>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+{% else %}
+
+<p>No MITRE ATT&CK techniques identified.</p>
+
+{% endif %}
+
+<hr>
+
+<h2>🌐 Indicators of Compromise (IOCs)</h2>
+
+<h3>IP Addresses</h3>
+
+{% if result["iocs"]["ips"] %}
+
+<ul>
+
+{% for ip in result["iocs"]["ips"] %}
+
+<li>{{ ip }}</li>
+
+{% endfor %}
+
+</ul>
+
+{% else %}
+
+<p>No IP addresses found.</p>
+
+{% endif %}
+
+<h3>Email Addresses</h3>
+
+{% if result["iocs"]["emails"] %}
+
+<ul>
+
+{% for email in result["iocs"]["emails"] %}
+
+<li>{{ email }}</li>
+
+{% endfor %}
+
+</ul>
+
+{% else %}
+
+<p>No Email addresses found.</p>
+
+{% endif %}
+
+<h3>URLs</h3>
+
+{% if result["iocs"]["urls"] %}
+
+<ul>
+
+{% for url in result["iocs"]["urls"] %}
+
+<li>{{ url }}</li>
+
+{% endfor %}
+
+</ul>
+
+{% else %}
+
+<p>No URLs found.</p>
+
+{% endif %}
+
+<hr>
+
+<h3>🌐 Domains</h3>
+
+{% if result["iocs"]["domains"] %}
+
+<ul>
+
+{% for domain in result["iocs"]["domains"] %}
+
+<li>{{ domain }}</li>
+
+{% endfor %}
+
+</ul>
+
+{% else %}
+
+<p>No Domains found.</p>
+
+{% endif %}
+
+<hr>
+
+<h3>🔐 MD5 Hashes</h3>
+
+{% if result["iocs"]["md5"] %}
+
+<ul>
+
+{% for hash in result["iocs"]["md5"] %}
+
+<li>{{ hash }}</li>
+
+{% endfor %}
+
+</ul>
+
+{% else %}
+
+<p>No MD5 hashes found.</p>
+
+{% endif %}
+
+<hr>
+
+<h3>🔐 SHA1 Hashes</h3>
+
+{% if result["iocs"]["sha1"] %}
+
+<ul>
+
+{% for hash in result["iocs"]["sha1"] %}
+
+<li>{{ hash }}</li>
+
+{% endfor %}
+
+</ul>
+
+{% else %}
+
+<p>No SHA1 hashes found.</p>
+
+{% endif %}
+
+<hr>
+
+<h3>🔐 SHA256 Hashes</h3>
+
+{% if result["iocs"]["sha256"] %}
+
+<ul>
+
+{% for hash in result["iocs"]["sha256"] %}
+
+<li>{{ hash }}</li>
+
+{% endfor %}
+
+</ul>
+
+{% else %}
+
+<p>No SHA256 hashes found.</p>
+
+{% endif %}
+
+<hr>
+
+<h3>🐞 CVE IDs</h3>
+
+{% if result["iocs"]["cves"] %}
+
+<ul>
+
+{% for cve in result["iocs"]["cves"] %}
+
+<li>{{ cve }}</li>
+
+{% endfor %}
+
+</ul>
+
+{% else %}
+
+<p>No CVE IDs found.</p>
+
+{% endif %}
+
+<hr>
+
+<h2>🛡 VirusTotal Threat Intelligence</h2>
+
+{% if result["virustotal"] %}
+
+<table class="mitre-table">
+
+    <thead>
+
+        <tr>
+
+            <th>IP Address</th>
+            <th>Country</th>
+            <th>Malicious</th>
+            <th>Suspicious</th>
+            <th>Harmless</th>
+            <th>Reputation</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+    {% for ip in result["virustotal"] %}
+
+    <tr>
+
+        <td>{{ ip["ip"] }}</td>
+        <td>{{ ip["country"] }}</td>
+        <td>{{ ip["malicious"] }}</td>
+        <td>{{ ip["suspicious"] }}</td>
+        <td>{{ ip["harmless"] }}</td>
+        <td>{{ ip["reputation"] }}</td>
+
+    </tr>
+
+    {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% else %}
+
+<p>No VirusTotal intelligence available.</p>
+
+{% endif %}
+
+<hr>
+
+<h2>📊 Threat Intelligence Summary</h2>
+
+<div class="threat-summary">
+
+    <div class="summary-card clean">
+
+        <h3>Clean</h3>
+
+        <h1>{{ result["threat_statistics"]["clean"] }}</h1>
+
+    </div>
+
+    <div class="summary-card malicious">
+
+        <h3>Malicious</h3>
+
+        <h1>{{ result["threat_statistics"]["malicious"] }}</h1>
+
+    </div>
+
+    <div class="summary-card suspicious">
+
+        <h3>Suspicious</h3>
+
+        <h1>{{ result["threat_statistics"]["suspicious"] }}</h1>
+
+    </div>
+
+    <div class="summary-card unknown">
+
+        <h3>Unknown</h3>
+
+        <h1>{{ result["threat_statistics"]["unknown"] }}</h1>
+
+    </div>
+
+</div>
+
+<hr>
+
+<h2>🌍 IP Geolocation</h2>
+
+{% if result["geolocation"] %}
+
+<table class="mitre-table">
+
+    <thead>
+
+        <tr>
+
+            <th>IP Address</th>
+            <th>Country</th>
+            <th>City</th>
+            <th>ISP</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+    {% for geo in result["geolocation"] %}
+
+    <tr>
+
+        <td>{{ geo["ip"] }}</td>
+
+        <td>{{ geo["country"] }}</td>
+
+        <td>{{ geo["city"] }}</td>
+
+        <td>{{ geo["isp"] }}</td>
+
+    </tr>
+
+    {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% else %}
+
+<p>No Geolocation data available.</p>
+
+{% endif %}
+
+<hr>
+
+<h2>📋 Incident Summary</h2>
+
+
+
+{% if result["incident"]["findings"] %}
+
+<ul>
+
+{% for finding in result["incident"]["findings"] %}
+
+<li>{{ finding }}</li>
+
+{% endfor %}
+
+</ul>
+
+{% endif %}
+
+<p><strong>Threat Assessment:</strong></p>
+
+<p>{{ result["incident"]["threat"] }}</p>
+
+<h3>Recommendations</h3>
+
+<ul>
+
+{% for rec in result["incident"]["recommendations"] %}
+
+<li>{{ rec }}</li>
+
+{% endfor %}
+
+</ul>
+
+<hr>
+
+<h2>📄 Parsed Security Logs</h2>
+
+<input
+    type="text"
+    id="searchInput"
+    class="search-box"
+    placeholder="🔍 Search logs by date, level or message...">
+
+<div class="filter-buttons">
+
+<button onclick="filterLogs('ALL')">
+    All
+</button>
+
+<button onclick="filterLogs('INFO')">
+    INFO
+</button>
+
+<button onclick="filterLogs('WARNING')">
+    WARNING
+</button>
+
+<button onclick="filterLogs('ERROR')">
+    ERROR
+</button>
+
+</div>   
+
+<table id="logTable" class="log-table">
+
+<thead>
+
+<tr>
+
+<th>Date</th>
+
+<th>Level</th>
+
+<th>Message</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+{% for log in result["logs"] %}
+
+<tr data-level="{{ log['level'] }}">
+
+<td>{{ log["date"] }}</td>
+
+<td>
+
+{% if log["level"] == "INFO" %}
+
+<span class="log-badge info">🟢 INFO</span>
+
+{% elif log["level"] == "WARNING" %}
+
+<span class="log-badge warning">🟡 WARNING</span>
+
+{% elif log["level"] == "ERROR" %}
+
+<span class="log-badge error">🔴 ERROR</span>
+
+{% else %}
+
+{{ log["level"] }}
+
+{% endif %}
+
+</td>
+
+<td>{{ log["message"] }}</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+<hr>
+
+<h2>🛡 IOC Reputation Dashboard</h2>
+
+{% if result["ioc_table"] %}
+
+<table class="mitre-table">
+
+    <thead>
+
+        <tr>
+
+            <th>IOC</th>
+            <th>Type</th>
+            <th>Reputation</th>
+            <th>Source</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+    {% for item in result["ioc_table"] %}
+
+        <tr>
+
+            <td>{{ item["ioc"] }}</td>
+
+            <td>{{ item["type"] }}</td>
+
+            <td>{{ item["reputation"] }}</td>
+
+            <td>{{ item["source"] }}</td>
+
+        </tr>
+
+    {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% else %}
+
+<p>No Indicators of Compromise found.</p>
+
+{% endif %}
+
+<hr>
+
+<h2>📊 IOC Analytics</h2>
+
+<div class="dashboard">
+
+{% for key, value in result["ioc_analytics"].items() %}
+
+<div class="card">
+
+<h3>{{ key | replace('_', ' ') | title }}</h3>
+
+<h1>{{ value }}</h1>
+
+</div>
+
+{% endfor %}
+
+</div>
+
+<hr>
+
+<h2>📅 Threat Timeline</h2>
+
+{% if result["timeline"] %}
+
+<table class="mitre-table">
+
+    <thead>
+
+        <tr>
+
+            <th>Time</th>
+            <th>Level</th>
+            <th>Event</th>
+
+        </tr>
+
+    </thead>
+
+    <tbody>
+
+    {% for event in result["timeline"] %}
+
+    <tr>
+
+        <td>{{ event["time"] }}</td>
+
+        <td>
+
+            {% if event["level"] == "INFO" %}
+
+                <span class="log-badge info">🟢 INFO</span>
+
+            {% elif event["level"] == "WARNING" %}
+
+                <span class="log-badge warning">🟡 WARNING</span>
+
+            {% elif event["level"] == "ERROR" %}
+
+                <span class="log-badge error">🔴 ERROR</span>
+
+            {% else %}
+
+                {{ event["level"] }}
+
+            {% endif %}
+
+        </td>
+
+        <td>{{ event["message"] }}</td>
+
+    </tr>
+
+    {% endfor %}
+
+    </tbody>
+
+</table>
+
+{% else %}
+
+<p>No timeline available.</p>
+
+{% endif %}
+
+<hr>
+
+<h2>📘 SOC Incident Response Playbook</h2>
+
+{% if result["playbook"] %}
+
+{% for step in result["playbook"] %}
+
+<div class="playbook-card">
+
+<h3>{{ step["title"] }}</h3>
+
+<p><strong>Containment:</strong> {{ step["containment"] }}</p>
+
+<p><strong>Investigation:</strong> {{ step["investigation"] }}</p>
+
+<p><strong>Recovery:</strong> {{ step["recovery"] }}</p>
+
+</div>
+
+{% endfor %}
+
+{% else %}
+
+<p>No playbook available.</p>
+
+{% endif %}
+
+<h2>🤖 AI Security Analysis</h2>
+
+<div class="ai-report">
+
+<pre>{{ result["ai_report"] }}</pre>
+
+</div>
+
+<hr>
+
+<h2>🎯 Attack Path</h2>
+
+{% if result["attack_path"] %}
+
+<div class="attack-path">
+
+{% for step in result["attack_path"] %}
+
+<div class="attack-step">
+
+{{ step }}
+
+</div>
+
+{% if not loop.last %}
+
+<div class="attack-arrow">
+
+⬇️
+
+</div>
+
+{% endif %}
+
+{% endfor %}
+
+</div>
+
+{% else %}
+
+<p>No attack chain identified.</p>
+
+{% endif %}
+
+<br><br>
+
+<a href="/download_pdf" class="download-btn">
+    📄 Download PDF Report
+</a>
+
+&nbsp;&nbsp;
+
+<a href="/">
+     Analyze Another Log
+</a>
+
+</div>
+
+<script>
+
+const ctx = document.getElementById("logChart");
+const summary = {{ result["summary"] | tojson }};
+
+new Chart(ctx, {
+
+    type: "pie",
+
+    data: {
+
+        labels: [
+
+            "INFO",
+
+            "WARNING",
+
+            "ERROR"
+
+        ],
+
+        datasets: [{
+
+            data: [
+
+                summary.INFO,
+
+                summary.WARNING,
+
+                summary.ERROR
+
+            ],
+
+            backgroundColor: [
+
+                "#4CAF50",
+
+                "#FFC107",
+
+                "#F44336"
+
+            ],
+
+            borderWidth:2
+
+        }]
+
+    },
+
+    options:{
+
+        responsive:true,
+
+        plugins:{
+
+            legend:{
+
+                position:"bottom"
+
+            } jubilee
+
+        }
+
+    }
+
+});
+
+const threatCtx = document.getElementById("threatChart");
+
+new Chart(threatCtx, {
+
+    type: "bar",
+
+    data: {
+
+        labels: [
+
+            "Threats",
+
+            "MITRE",
+
+            "IOCs"
+
+        ],
+
+        datasets: [{
+
+            label: "Detected",
+
+            data: [
+
+                {{ result["threats"]|length }},
+
+                {{ result["mitre"]|length }},
+
+                {{ result["iocs"]["ips"]|length +
+                   result["iocs"]["emails"]|length +
+                   result["iocs"]["urls"]|length +
+                   result["iocs"]["domains"]|length +
+                   result["iocs"]['md5']|length +
+                   result['iocs']['sha1']|length +
+                   result['iocs']['sha256']|length +
+                   result['iocs']['cves']|length }}
+
+            ],
+
+            backgroundColor: [
+
+                "#ef5350",
+
+                "#42a5f5",
+
+                "#66bb6a"
+
+            ],
+
+            borderRadius:8
+
+        }]
+
+    },
+
+    options:{
+
+        responsive:true,
+
+        plugins:{
+
+            legend:{
+
+                display:false
+
+            }
+
+        }
+
+    }
+
+});
+
+</script>
+
+<script>
+
+const severityCtx = document.getElementById("severityChart");
+
+new Chart(severityCtx, {
+
+    type: "doughnut",
+
+    data: {
+
+        labels: [
+            "Critical",
+            "High",
+            "Medium",
+            "Low"
+        ],
+
+        datasets: [{
+
+            data: [
+
+                {{ result["threat_severity"]["Critical"] }},
+
+                {{ result["threat_severity"]["High"] }},
+
+                {{ result["threat_severity"]["Medium"] }},
+
+                {{ result["threat_severity"]["Low"] }}
+
+            ],
+
+            backgroundColor: [
+
+                "#d32f2f",
+                "#f57c00",
+                "#fbc02d",
+                "#43a047"
+
+            ]
+
+        }]
+
+    },
+
+    options: {
+
+        responsive: true,
+
+        plugins: {
+
+            legend: {
+
+                position: "bottom"
+
+            }
+
+        }
+
+    }
+
+});
+
+</script>
+
+<script>
+
+const searchInput = document.getElementById("searchInput");
+
+searchInput.addEventListener("keyup", function () {
+
+    let filter = this.value.toUpperCase();
+
+    let rows = document.querySelectorAll("#logTable tbody tr");
+
+    rows.forEach(function(row){
+
+        let text = row.innerText.toUpperCase();
+
+        if(text.includes(filter)){
+
+            row.style.display="";
+
+        }
+        else{
+
+            row.style.display="none";
+
+        }
+
+    });
+
+});
+
+</script>
+
+<script>
+
+function filterLogs(level){
+
+    let rows = document.querySelectorAll("#logTable tbody tr");
+
+    rows.forEach(function(row){
+
+        if(level === "ALL"){
+
+            row.style.display="";
+
+        }
+
+        else if(row.dataset.level === level){
+
+            row.style.display="";
+
+        }
+
+        else{
+
+            row.style.display="none";
+
+        }
+
+    });
+
+}
+
+</script>
+
+<script>
+
+const counters = document.querySelectorAll(".counter");
+
+counters.forEach(counter => {
+
+    const updateCounter = () => {
+
+        const target = +counter.getAttribute("data-target");
+
+        const count = +counter.innerText;
+
+        const speed = 80;
+
+        const increment = Math.ceil(target / speed);
+
+        if(count < target){
+            counter.innerText = Math.min(count + increment, target);
+            setTimeout(updateCounter, 20);
+        } else {
+            counter.innerText = target;
+        }
+    };
+    
+    updateCounter();
+
+});
+
+</script>
+
+</div>
+
+<footer class="footer">
+    <p>AI Security Analyzer v1.0</p>
+    <p>Developed by Shiwani Rai</p>
+    <p>Powered by Wazuh • VirusTotal • Ollama • MITRE ATT&CK</p>
+</footer>
+
+</body>
+
+</html>
